@@ -1,13 +1,143 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  college   String?
+  branch    String?
+  year      Int?
+  skills    String[]
+  resumeUrl String?
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  savedInternships SavedInternship[]
+  notifications    Notification[]
+  aiAnalyses       AiAnalysis[]
+}
+
+model Internship {
+  id           String            @id @default(uuid())
+  title        String
+  company      String
+  source       String
+  type         InternshipType
+  domain       String[]
+  location     String?
+  isRemote     Boolean           @default(false)
+  stipendMin   Int?
+  stipendMax   Int?
+  duration     String?
+  deadline     DateTime?
+  applyUrl     String
+  status       InternshipStatus  @default(OPEN)
+  verified     Boolean           @default(false)
+  skillsReq    String[]
+  criteria     String?
+  reopenDate   DateTime?
+  description  String?
+  createdAt    DateTime          @default(now())
+  lastScraped  DateTime?
+
+  savedBy      SavedInternship[]
+  notifications Notification[]
+  aiAnalyses   AiAnalysis[]
+}
+
+model SavedInternship {
+  id             String                @id @default(uuid())
+  userId         String
+  internshipId   String
+  notifyReopen   Boolean               @default(false)
+  applicationStatus ApplicationStatus @default(SAVED)
+  notes          String?
+  createdAt      DateTime              @default(now())
+
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  internship     Internship            @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, internshipId])
+}
+
+model Notification {
+  id             String           @id @default(uuid())
+  userId         String
+  internshipId   String?
+  type           NotificationType
+  message        String
+  read           Boolean          @default(false)
+  sentAt         DateTime         @default(now())
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  internship     Internship?      @relation(fields: [internshipId], references: [id], onDelete: SetNull)
+}
+
+model AiAnalysis {
+  id             String     @id @default(uuid())
+  userId         String
+  internshipId   String
+  fitScore       Float?
+  matchReasons   String[]
+  missingSkills  String[]
+  coverLetter    String?
+  generatedAt    DateTime   @default(now())
+
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  internship     Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, internshipId])
+}
+
+model ScrapeLog {
+  id         String      @id @default(uuid())
+  source     String
+  ranAt      DateTime    @default(now())
+  status     ScrapeStatus
+  newFound   Int         @default(0)
+  errors     String?
+}
+
+enum InternshipType {
+  GOVERNMENT
+  STARTUP
+  CORPORATE
+  RESEARCH
+}
+
+enum InternshipStatus {
+  OPEN
+  CLOSED
+  REOPENING
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEW
+  REJECTED
+  SELECTED
+}
+
+enum NotificationType {
+  DEADLINE_REMINDER
+  REOPEN_ALERT
+  NEW_MATCH
+  WEEKLY_DIGEST
+}
+
+enum ScrapeStatus {
+  SUCCESS
+  FAILED
+  PARTIAL
 }
