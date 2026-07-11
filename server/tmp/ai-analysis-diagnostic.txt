@@ -1,0 +1,8 @@
+InternRadar AI analysis diagnostic
+=================================
+Timestamp: 2026-07-11T11:33:49Z
+Endpoint tested: POST /api/internships/143013f9-c25b-4ece-b3d2-004f7c0f2d15/analyze
+Auth required: Yes (Bearer JWT)
+Observed status: 200
+Observed response: {"success":true,"data":{"id":"09419820-1e4d-400c-83a1-5fb5d8a19bff","userId":"0f6dcedd-5b95-473b-95ca-f10a4eb53b53","internshipId":"143013f9-c25b-4ece-b3d2-004f7c0f2d15","fitScore":20,"matchReasons":["Student is in CSE branch, which is relevant to the internship.","Student is in 3rd year, which is a suitable stage for an internship.","However, student lacks required skills for the internship."],"missingSkills":["C++","Python","Linux"],"coverLetter":null,"generatedAt":"2026-07-11T11:33:49.111Z"},"cached":true}
+Conclusion: analyzeFit() executed successfully and the Groq-backed analysis flow returned a valid response.
