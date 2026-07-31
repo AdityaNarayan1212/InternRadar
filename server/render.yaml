@@ -1,0 +1,27 @@
+# Render service configuration for InternRadar backend
+# This file can be used for manual service creation or documentation.
+# Render automatically detects a Node service from package.json.
+
+services:
+  - type: web
+    name: internradar-backend
+    env: node
+    plan: starter # adjust as needed
+    region: oregon # choose your preferred region
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://your-frontend-domain.com
+      - key: DATABASE_URL
+        value: <your-production-database-url>
+      - key: DIRECT_URL
+        value: <your-production-direct-url>
+      - key: JWT_SECRET
+        value: <your-jwt-secret>
+      - key: GROQ_API_KEY
+        value: <your-groq-api-key>
