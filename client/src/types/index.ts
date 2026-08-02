@@ -2,11 +2,13 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  college: string;
-  branch: string;
-  year: number;
+  college?: string;
+  branch?: string;
+  year?: number;
   skills: string[];
   resumeUrl?: string;
+  isAdmin?: boolean;
+  createdAt?: string;
 }
 
 export interface Internship {
@@ -14,19 +16,23 @@ export interface Internship {
   title: string;
   company: string;
   source: string;
-  type: 'government' | 'startup' | 'corporate';
+  type: 'GOVERNMENT' | 'STARTUP' | 'CORPORATE' | 'RESEARCH';
   domain: string[];
-  location: string;
+  location?: string;
   isRemote: boolean;
   stipendMin?: number;
   stipendMax?: number;
-  duration: string;
+  duration?: string;
   deadline?: string;
   applyUrl: string;
-  status: 'open' | 'closed' | 'reopening';
+  status: 'OPEN' | 'CLOSED' | 'REOPENING';
   verified: boolean;
-  skillsRequired: string[];
+  skillsReq: string[];
   criteria?: string;
+  reopenDate?: string;
+  description?: string;
+  createdAt?: string;
+  lastScraped?: string;
   fitScore?: number;
 }
 
