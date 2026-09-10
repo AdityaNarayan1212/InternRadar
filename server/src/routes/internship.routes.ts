@@ -3,13 +3,13 @@ import {
   getInternships, getInternshipById,
   toggleSave, getSaved, updateStatus
 } from '../controllers/internship.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/',           getInternships);
+router.get('/',           optionalAuth, getInternships);
 router.get('/saved',      authenticate, getSaved);
-router.get('/:id',        getInternshipById);
+router.get('/:id',        optionalAuth, getInternshipById);
 router.post('/:id/save',  authenticate, toggleSave);
 router.patch('/:id/status', authenticate, updateStatus);
 

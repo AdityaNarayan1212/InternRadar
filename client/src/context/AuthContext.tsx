@@ -1,35 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import api from '../lib/axios';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  college?: string;
-  branch?: string;
-  year?: number;
-  skills: string[];
-}
-
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
-  loading: boolean;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  name: string;
-  college?: string;
-  branch?: string;
-  year?: number;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import type { User } from '../types';
+import { AuthContext, type RegisterData } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -52,6 +24,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     fetchUser();
   }, [token]);
+
+  // Re-fetches the current user - used after a profile edit so Navbar/etc.
+  // reflect the new data without a full page reload.
+  const refreshUser = async () => {
+    if (!token) return;
+    const res = await api.get('/auth/me');
+    setUser(res.data.data);
+  };
 
   const login = async (email: string, password: string) => {
     const res = await api.post('/auth/login', { email, password });
@@ -76,14 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
 }

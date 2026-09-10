@@ -51,6 +51,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           branch: user.branch,
           year: user.year,
           skills: user.skills,
+          resumeUrl: user.resumeUrl,
+          isAdmin: user.isAdmin,
         },
       },
     });
@@ -98,6 +100,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           branch: user.branch,
           year: user.year,
           skills: user.skills,
+          resumeUrl: user.resumeUrl,
+          isAdmin: user.isAdmin,
         },
       },
     });

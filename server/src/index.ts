@@ -2,13 +2,22 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler';
+import { ensureResumeBucket } from './lib/supabase';
+import { startNotificationScheduler } from './jobs/notificationScheduler';
 import routes from './routes';
-
-process.env.DATABASE_URL = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// General limiter across the API - generous, just guards against abuse
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware
 app.use(helmet());
@@ -18,6 +27,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' })); // 10mb for resume uploads
 app.use(express.urlencoded({ extended: true }));
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/api', routes);
@@ -31,6 +41,8 @@ app.listen(PORT, () => {
   🌐 http://localhost:${PORT}
   📡 API: http://localhost:${PORT}/api/health
   `);
+  ensureResumeBucket();
+  startNotificationScheduler();
 });
 
 export default app;

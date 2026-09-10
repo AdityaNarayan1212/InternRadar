@@ -1,4 +1,9 @@
+import bcrypt from 'bcryptjs';
 import { prisma } from './lib/prisma';
+
+// Deadlines relative to seed time so the urgency chips (7-day / 2-day
+// thresholds) actually have something to demonstrate, whenever this runs.
+const daysFromNow = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 
 async function seed() {
   console.log('🌱 Seeding database...');
@@ -18,7 +23,7 @@ async function seed() {
         stipendMin: 10000,
         stipendMax: 15000,
         duration: '2 months',
-        deadline: new Date('2025-07-31'),
+        deadline: daysFromNow(45),
         applyUrl: 'https://drdo.gov.in',
         status: 'OPEN',
         verified: true,
@@ -37,7 +42,7 @@ async function seed() {
         stipendMin: 25000,
         stipendMax: 40000,
         duration: '3 months',
-        deadline: new Date('2025-08-15'),
+        deadline: daysFromNow(20),
         applyUrl: 'https://razorpay.com/jobs',
         status: 'OPEN',
         verified: true,
@@ -56,7 +61,7 @@ async function seed() {
         stipendMin: 12000,
         stipendMax: 18000,
         duration: '2 months',
-        deadline: new Date('2025-07-20'),
+        deadline: daysFromNow(2),
         applyUrl: 'https://cert-in.org.in',
         status: 'OPEN',
         verified: true,
@@ -75,7 +80,7 @@ async function seed() {
         stipendMin: 20000,
         stipendMax: 35000,
         duration: '3 months',
-        deadline: new Date('2025-08-30'),
+        deadline: daysFromNow(60),
         applyUrl: 'https://zeptonow.com/careers',
         status: 'OPEN',
         verified: false,
@@ -94,7 +99,7 @@ async function seed() {
         stipendMin: 15000,
         stipendMax: 20000,
         duration: '2 months',
-        deadline: new Date('2025-07-10'),
+        deadline: daysFromNow(6),
         applyUrl: 'https://isro.gov.in',
         status: 'OPEN',
         verified: true,
@@ -113,7 +118,7 @@ async function seed() {
         stipendMin: 30000,
         stipendMax: 50000,
         duration: '3 months',
-        deadline: new Date('2025-09-01'),
+        deadline: daysFromNow(35),
         applyUrl: 'https://cred.club/careers',
         status: 'OPEN',
         verified: false,
@@ -132,7 +137,7 @@ async function seed() {
         stipendMin: 18000,
         stipendMax: 25000,
         duration: '2 months',
-        deadline: new Date('2025-08-01'),
+        deadline: daysFromNow(15),
         applyUrl: 'https://nasscom.in',
         status: 'OPEN',
         verified: true,
@@ -151,7 +156,7 @@ async function seed() {
         stipendMin: 35000,
         stipendMax: 50000,
         duration: '3 months',
-        deadline: new Date('2025-08-20'),
+        deadline: daysFromNow(1),
         applyUrl: 'https://swiggy.com/careers',
         status: 'OPEN',
         verified: false,
@@ -163,6 +168,25 @@ async function seed() {
   });
 
   console.log('✅ Seeded 8 internships');
+
+  // Demo admin account - upsert so re-running seed doesn't fail on a
+  // duplicate email. Password is intentionally simple/documented since this
+  // is a local dev seed, not a real credential - change it before deploying
+  // anywhere real.
+  const adminPassword = await bcrypt.hash('admin123', 12);
+  await prisma.user.upsert({
+    where: { email: 'admin@internradar.dev' },
+    update: { isAdmin: true },
+    create: {
+      email: 'admin@internradar.dev',
+      password: adminPassword,
+      name: 'InternRadar Admin',
+      skills: [],
+      isAdmin: true,
+    },
+  });
+  console.log('✅ Seeded admin account (admin@internradar.dev / admin123)');
+
   await prisma.$disconnect();
 }
 
