@@ -9,8 +9,7 @@
 // lineup has moved on again by the time this runs - check
 // https://console.groq.com/docs/models for the current list.
 
-const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-const DEFAULT_MODEL = 'openai/gpt-oss-20b';
+import { groqJson } from './groq.client';
 
 export interface MatchInput {
   title: string;
@@ -34,11 +33,6 @@ export async function computeFitScore(
   candidateSkills: string[],
   internship: MatchInput
 ): Promise<MatchResult> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey || apiKey === 'your_groq_key_here') {
-    throw new Error('GROQ_API_KEY is not configured');
-  }
-
   const userPrompt = JSON.stringify({
     candidateSkills,
     internship: {
@@ -50,45 +44,22 @@ export async function computeFitScore(
     },
   });
 
-  const res = await fetch(GROQ_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: process.env.GROQ_MODEL || DEFAULT_MODEL,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    throw new Error(`Groq API error ${res.status}: ${errText.slice(0, 300)}`);
-  }
-
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = json.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Groq API returned no content');
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    throw new Error('Groq API returned malformed JSON');
-  }
-
+  const parsed = await groqJson({ system: SYSTEM_PROMPT, user: userPrompt, tag: 'fit-score' });
   const result = parsed as Partial<MatchResult>;
   const fitScore = Math.max(0, Math.min(100, Math.round(Number(result.fitScore) || 0)));
 
-  const requiredSet = new Set(internship.skillsReq);
+  // Case-insensitive match back to the internship's own spelling, so "react" from
+  // the model still maps onto "React" in skillsReq instead of being dropped.
+  const requiredByLower = new Map(internship.skillsReq.map((s) => [s.toLowerCase(), s]));
   const missingSkills = Array.isArray(result.missingSkills)
-    ? result.missingSkills.filter((s): s is string => typeof s === 'string' && requiredSet.has(s))
+    ? [
+        ...new Set(
+          result.missingSkills
+            .filter((s): s is string => typeof s === 'string')
+            .map((s) => requiredByLower.get(s.trim().toLowerCase()))
+            .filter((s): s is string => !!s)
+        ),
+      ]
     : [];
   const matchReasons = Array.isArray(result.matchReasons)
     ? result.matchReasons.filter((s): s is string => typeof s === 'string').slice(0, 3)

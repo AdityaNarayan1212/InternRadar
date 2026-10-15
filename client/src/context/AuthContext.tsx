@@ -1,9 +1,11 @@
 import { useState, useEffect, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../lib/axios';
 import type { User } from '../types';
 import { AuthContext, type RegisterData } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const res = await api.post('/auth/login', { email, password });
     const { token: newToken, user: newUser } = res.data.data;
+    queryClient.clear();
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(newUser);
@@ -44,12 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterData) => {
     const res = await api.post('/auth/register', data);
     const { token: newToken, user: newUser } = res.data.data;
+    queryClient.clear();
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
+    queryClient.clear();
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);

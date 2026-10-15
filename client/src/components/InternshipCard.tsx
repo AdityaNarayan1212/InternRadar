@@ -67,7 +67,11 @@ export default function InternshipCard({
 
       <div className="flex items-center gap-2">
         {isUnderrated(internship.type) && <UnderratedBadge />}
-        <DeadlineChip deadline={internship.deadline} status={internship.status} />
+        <DeadlineChip
+          deadline={internship.deadline}
+          reopenDate={internship.reopenDate}
+          status={internship.status}
+        />
         {onToggleSave && (
           <button
             type="button"

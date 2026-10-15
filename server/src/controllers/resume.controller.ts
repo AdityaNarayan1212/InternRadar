@@ -64,16 +64,11 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
     return;
   }
 
-  // 2. Extract skills via Groq
-  let extractedSkills: string[] = [];
-  try {
-    extractedSkills = await extractSkillsFromResume(text);
-  } catch (err) {
-    // Storage upload can still succeed even if skill extraction fails (e.g.
-    // Groq is down / misconfigured) - the resume gets saved, skills just
-    // won't auto-populate this time.
-    console.error('[uploadResume] skill extraction failed:', err);
-  }
+  // 2. Extract skills (Groq with retries, keyword fallback; never throws).
+  // Storage upload proceeds regardless, and the response tells the client when
+  // the AI path was degraded instead of silently reporting 0 skills.
+  const extraction = await extractSkillsFromResume(text);
+  const extractedSkills = extraction.skills;
 
   // 3. Upload to Supabase Storage (private bucket, fixed per-user path)
   const path = resumePathFor(userId);
@@ -109,6 +104,8 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
     success: true,
     data: updated,
     skillsExtracted: extractedSkills.length,
+    extractionSource: extraction.source,
+    extractionWarning: extraction.warning,
   });
 };
 

@@ -75,8 +75,21 @@ export const getInternships = async (req: Request, res: Response): Promise<void>
       where.id = { in: [] };
     }
 
-    const pageNum = parseInt(page as string) || 1;
-    const limitNum = parseInt(limit as string) || 12;
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    if (
+      !Number.isSafeInteger(pageNum) ||
+      pageNum < 1 ||
+      !Number.isSafeInteger(limitNum) ||
+      limitNum < 1 ||
+      limitNum > 100
+    ) {
+      res.status(400).json({
+        success: false,
+        message: 'page must be a positive integer and limit must be between 1 and 100',
+      });
+      return;
+    }
 
     let internships: InternshipRow[];
     let total: number;

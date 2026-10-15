@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "seed": "ts-node-dev --transpile-only src/seed.ts",
+    "seed:rare": "ts-node-dev --transpile-only src/data/rareInternships.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
@@ -30,7 +31,8 @@
     "jsonwebtoken": "^9.0.0",
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
-    "pdf-parse": "^2.4.5"
+    "pdf-parse": "^2.4.5",
+    "server": "file:"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

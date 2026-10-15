@@ -46,6 +46,7 @@ export default function InternshipDetail() {
         old ? { ...old, isSaved: saved, applicationStatus: saved ? 'SAVED' : undefined } : old
       );
       queryClient.invalidateQueries({ queryKey: ['internships'] });
+      queryClient.invalidateQueries({ queryKey: ['saved'] });
     },
   });
 
@@ -55,6 +56,7 @@ export default function InternshipDetail() {
       queryClient.setQueryData<Internship>(['internship', id], (old) =>
         old ? { ...old, applicationStatus: status } : old
       );
+      queryClient.invalidateQueries({ queryKey: ['saved'] });
     },
   });
 
@@ -201,7 +203,11 @@ export default function InternshipDetail() {
 
               <div className="flex flex-wrap items-center gap-2 mt-4">
                 {isUnderrated(internship.type) && <UnderratedBadge />}
-                <DeadlineChip deadline={internship.deadline} status={internship.status} />
+                <DeadlineChip
+                  deadline={internship.deadline}
+                  reopenDate={internship.reopenDate}
+                  status={internship.status}
+                />
               </div>
 
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-sm">

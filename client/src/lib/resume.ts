@@ -5,6 +5,8 @@ export interface ResumeUploadResult {
   success: boolean;
   data: User;
   skillsExtracted: number;
+  extractionSource?: 'ai' | 'ai+keywords' | 'keywords';
+  extractionWarning?: string;
 }
 
 export async function uploadResumeFile(file: File): Promise<ResumeUploadResult> {

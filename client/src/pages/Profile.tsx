@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Loader2, Sparkles, UploadCloud, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -40,6 +40,7 @@ export default function Profile() {
 
 function ProfileForm({ user }: { user: User }) {
   const { refreshUser } = useAuth();
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState(user.name ?? '');
   const [college, setCollege] = useState(user.college ?? '');
@@ -52,8 +53,15 @@ function ProfileForm({ user }: { user: User }) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const invalidateMatchQueries = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['internships'] }),
+      queryClient.invalidateQueries({ queryKey: ['internship'] }),
+    ]);
+
   const recomputeMutation = useMutation({
     mutationFn: recomputeScores,
+    onSuccess: invalidateMatchQueries,
   });
 
   const saveMutation = useMutation({
@@ -84,6 +92,7 @@ function ProfileForm({ user }: { user: User }) {
       setSkills(result.data.skills);
       setResumeError(null);
       await refreshUser();
+      await invalidateMatchQueries();
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } } };
@@ -363,6 +372,14 @@ function ProfileForm({ user }: { user: User }) {
                 the background.
               </p>
             )}
+            {uploadMutation.isSuccess &&
+              !uploadMutation.isPending &&
+              uploadMutation.data.extractionWarning && (
+                <p className="text-sm text-fit-amber mt-1">
+                  {uploadMutation.data.extractionWarning} Review the list above and add anything
+                  missing.
+                </p>
+              )}
           </div>
 
           <div className="flex items-center gap-3">

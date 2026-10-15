@@ -78,22 +78,28 @@ export default function Internships() {
     mutationFn: (id: string) => toggleSaveInternship(id),
     onMutate: async (id: string) => {
       await queryClient.cancelQueries({ queryKey: ['internships'] });
-      const previous = queryClient.getQueriesData<{ pages: PaginatedInternships[] }>({
-        queryKey: ['internships'],
-      });
-      queryClient.setQueriesData<{ pages: PaginatedInternships[]; pageParams: unknown[] } | undefined>(
+      const previous = queryClient.getQueriesData<
+        | { pages: PaginatedInternships[]; pageParams: unknown[] }
+        | PaginatedInternships
+      >({ queryKey: ['internships'] });
+      queryClient.setQueriesData<
+        | { pages: PaginatedInternships[]; pageParams: unknown[] }
+        | PaginatedInternships
+        | undefined
+      >(
         { queryKey: ['internships'] },
         (old) => {
           if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              data: page.data.map((i: Internship) =>
-                i.id === id ? { ...i, isSaved: !i.isSaved } : i
-              ),
-            })),
-          };
+          const patchPage = (page: PaginatedInternships): PaginatedInternships => ({
+            ...page,
+            data: page.data.map((i: Internship) =>
+              i.id === id ? { ...i, isSaved: !i.isSaved } : i
+            ),
+          });
+          if ('pages' in old) {
+            return { ...old, pages: old.pages.map(patchPage) };
+          }
+          return patchPage(old);
         }
       );
       return { previous };
@@ -101,6 +107,7 @@ export default function Internships() {
     onError: (_err, _id, context) => {
       context?.previous?.forEach(([key, prevData]) => queryClient.setQueryData(key, prevData));
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['saved'] }),
   });
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);

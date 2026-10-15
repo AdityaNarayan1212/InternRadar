@@ -81,13 +81,17 @@ export const requireAdmin = async (
     res.status(401).json({ success: false, message: 'Authentication required' });
     return;
   }
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.userId },
-    select: { isAdmin: true },
-  });
-  if (!user?.isAdmin) {
-    res.status(403).json({ success: false, message: 'Admin access required' });
-    return;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { isAdmin: true },
+    });
+    if (!user?.isAdmin) {
+      res.status(403).json({ success: false, message: 'Admin access required' });
+      return;
+    }
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 };

@@ -28,6 +28,7 @@ export interface Internship {
   stipendMax?: number;
   duration?: string;
   deadline?: string;
+  reopenDate?: string;
   applyUrl: string;
   status: InternshipStatus;
   verified: boolean;
