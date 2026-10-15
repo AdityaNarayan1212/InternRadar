@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SlidersHorizontal, X, SearchX, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import InternshipCard from '../components/InternshipCard';
@@ -16,9 +16,9 @@ const TYPE_OPTIONS: { value: InternshipType; label: string }[] = [
 ];
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'fitScore', label: 'Best fit' },
   { value: 'recency', label: 'Most recent' },
   { value: 'deadline', label: 'Deadline soonest' },
-  { value: 'fitScore', label: 'Fit score' },
 ];
 
 export default function Internships() {
@@ -31,7 +31,7 @@ export default function Internships() {
   const [underratedOnly, setUnderratedOnly] = useState(false);
   const [minFitScore, setMinFitScore] = useState(0);
   const [minStipend, setMinStipend] = useState('');
-  const [sort, setSort] = useState<SortOption>('recency');
+  const [sort, setSort] = useState<SortOption>('fitScore');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -55,9 +55,10 @@ export default function Internships() {
 
   const queryClient = useQueryClient();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } =
     useInfiniteQuery({
       queryKey: ['internships', filters],
+      placeholderData: keepPreviousData,
       queryFn: ({ pageParam }) => fetchInternships(filters, pageParam),
       initialPageParam: 1,
       getNextPageParam: (lastPage) =>
@@ -338,7 +339,9 @@ export default function Internships() {
             ) : isError ? (
               <EmptyState
                 title="Couldn't load internships"
-                message="Something went wrong reaching the server. Try again in a moment."
+                message="Check that the API is running and VITE_API_URL points to it, then try again."
+                actionLabel="Retry"
+                onAction={() => refetch()}
               />
             ) : internships.length === 0 ? (
               <EmptyState

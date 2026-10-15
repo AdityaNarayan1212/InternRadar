@@ -6,10 +6,18 @@ import { prisma } from '../lib/prisma';
 // REGISTER
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name, college, branch, year } = req.body;
+    const { password, name, college, branch, year } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+
+    if (!email || typeof password !== 'string' || !password || !name) {
+      res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+      return;
+    }
 
     // Check if user already exists
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
     if (existing) {
       res.status(400).json({ success: false, message: 'Email already registered' });
       return;
@@ -57,17 +65,29 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Registration failed' });
+    console.error('[auth] Registration failed', error);
+    res.status(503).json({
+      success: false,
+      message: 'Registration is temporarily unavailable. Please try again.',
+    });
   }
 };
 
 // LOGIN
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim() : '';
+
+    if (!email || typeof password !== 'string' || !password) {
+      res.status(400).json({ success: false, message: 'Email and password are required' });
+      return;
+    }
 
     // Find user
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
     if (!user) {
       res.status(401).json({ success: false, message: 'Invalid email or password' });
       return;
@@ -106,7 +126,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Login failed' });
+    console.error('[auth] Login failed', error);
+    res.status(503).json({
+      success: false,
+      message: 'Login is temporarily unavailable. Please try again.',
+    });
   }
 };
 
@@ -136,6 +160,10 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 
     res.json({ success: true, data: user });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to get user' });
+    console.error('[auth] Failed to get current user', error);
+    res.status(503).json({
+      success: false,
+      message: 'Session verification is temporarily unavailable. Please try again.',
+    });
   }
 };

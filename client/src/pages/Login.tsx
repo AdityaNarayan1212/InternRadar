@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Radar } from 'lucide-react';
+import axios from 'axios';
 import { useAuth } from '../context/useAuth';
 import RadarRings from '../components/RadarRings';
 
@@ -39,10 +40,20 @@ export default function Login() {
       } else {
         await login(form.email, form.password);
       }
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Something went wrong');
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(
+          err.response?.data?.message ??
+            (err.response
+              ? 'The server could not complete your request. Please try again.'
+              : 'Cannot reach the server. Check that the API is running and VITE_API_URL is correct.')
+        );
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -99,6 +110,7 @@ export default function Login() {
 
           <input
             type="email"
+            autoComplete="email"
             placeholder="Email address"
             value={form.email}
             onChange={e => setForm({ ...form, email: e.target.value })}
@@ -108,6 +120,7 @@ export default function Login() {
 
           <input
             type="password"
+            autoComplete={isRegister ? 'new-password' : 'current-password'}
             placeholder="Password"
             value={form.password}
             onChange={e => setForm({ ...form, password: e.target.value })}

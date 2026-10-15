@@ -33,11 +33,21 @@ function RootRoute() {
   return user ? <Navigate to="/dashboard" replace /> : <Landing />;
 }
 
+function LoginRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-500">Loading...</p>
+    </div>
+  );
+  return user ? <Navigate to="/dashboard" replace /> : <Login />;
+}
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<RootRoute />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginRoute />} />
       {/* Browsable while logged out - fit scores/save just show as locked
           without an account, matching the brief's public "Browse
           internships" flow. Detail/list personalize automatically once

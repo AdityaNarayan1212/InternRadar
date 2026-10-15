@@ -10,6 +10,11 @@ import routes from './routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const jwtSecret = process.env.JWT_SECRET?.trim();
+
+if (!jwtSecret || jwtSecret === 'replace_with_a_long_random_string') {
+  throw new Error('Set JWT_SECRET to a unique secret before starting the API.');
+}
 
 // General limiter across the API - generous, just guards against abuse
 const apiLimiter = rateLimit({

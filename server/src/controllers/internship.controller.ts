@@ -13,7 +13,7 @@ export const getInternships = async (req: Request, res: Response): Promise<void>
     const {
       type, isRemote, domain, search, status,
       underratedOnly, minFitScore, minStipend, maxStipend,
-      sort = 'recency', page = '1', limit = '12',
+      sort = 'fitScore', page = '1', limit = '12',
     } = req.query;
 
     const where: Record<string, unknown> = {};

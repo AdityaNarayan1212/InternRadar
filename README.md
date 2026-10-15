@@ -87,6 +87,15 @@ cp .env.example .env
 
 On Windows PowerShell, use `Copy-Item .env.example .env`. Set `VITE_API_URL` to the API base URL; the local default is `http://localhost:5000/api`.
 
+### Production deployment checklist
+
+- Deploy the backend and frontend separately, or configure a reverse proxy that forwards `/api` to the backend.
+- Set the backend's `CLIENT_URL` to the exact deployed frontend origin and configure its database, `JWT_SECRET`, and other required server-side secrets in the hosting provider. Never put server secrets in frontend environment variables.
+- Set the frontend build environment variable `VITE_API_URL` to the deployed API base URL, including `/api` (for example, `https://api.example.com/api`). Production builds intentionally fail API requests with a clear configuration error if this value is missing; they do not fall back to `localhost`.
+- Run `npx prisma migrate deploy` against the production database before starting the backend. Add internship records through the admin tools or seed scripts only when appropriate; `npm run seed` deletes existing internship data.
+- Build the frontend with `npm run build` from `client` and the backend with `npm run build` from `server`. Serve the frontend's `dist` directory with SPA fallback routing, and start the backend with `npm start`.
+- Verify `GET /api/health` returns success (including its database check), account registration/login, and `GET /api/internships` against the deployed API before launch. The API refuses to start with the example JWT secret.
+
 ### Run the applications
 
 Start the backend and frontend in separate terminals:
